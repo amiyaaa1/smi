@@ -1,0 +1,39 @@
+services:
+  simplai2api:
+    build: .
+    container_name: simplai2api
+    restart: unless-stopped
+    init: true
+    ports:
+      - "127.0.0.1:8031:8031"
+    environment:
+      TZ: Asia/Shanghai
+      SIMPLAI2API_HOST: 0.0.0.0
+      SIMPLAI2API_PORT: 8031
+      SIMPLAI2API_ADMIN_PASSWORD: ${SIMPLAI2API_ADMIN_PASSWORD:-Nishibaka114514.}
+      USE_WARP_PROXY: ${USE_WARP_PROXY:-false}
+      WARP_PROXY_URL: ${WARP_PROXY_URL:-}
+      SIMPLAI_HELPER_USE_WARP_PROXY: ${SIMPLAI_HELPER_USE_WARP_PROXY:-false}
+      SIMPLAI_HELPER_PROXY_URL: ${SIMPLAI_HELPER_PROXY_URL:-}
+      SIMPLAI_PROFILE_BASE_DIR: /app/profiles
+      SIMPLAI_CLOAKBROWSER_PATH: /app/third_party/CloakBrowser
+      SIMPLAI_PROTOCOL_KEYGEN_PATH: /app/third_party/protocol_keygen.py
+      CLOAKBROWSER_CACHE_DIR: /app/cloakbrowser-cache
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+    volumes:
+      - ./data:/app/data
+      - ./profiles:/app/profiles
+      - ./logs:/app/logs
+      - ./cloakbrowser-cache:/app/cloakbrowser-cache
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:8031/healthz',res=>process.exit(res.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

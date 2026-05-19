@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimplAI2API 登录</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    body { min-height: 100vh; display: grid; place-items: center; }
+    .login-card { width: min(420px, calc(100vw - 32px)); }
+    .login-card h1 { margin: 0 0 8px; }
+    .login-card p { margin: 0 0 18px; color: var(--muted); }
+    .error { color: #ffb3b3; min-height: 22px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <section class="card login-card">
+    <h1>SimplAI2API 登录</h1>
+    <p>请输入管理密码后进入账号管理台。</p>
+    <form id="loginForm">
+      <label>
+        <span>密码</span>
+        <input id="password" type="password" placeholder="请输入密码" required autofocus />
+      </label>
+      <div class="form-actions" style="margin-top: 14px;">
+        <button type="submit">登录</button>
+      </div>
+      <div id="error" class="error"></div>
+    </form>
+  </section>
+  <script>
+    const form = document.getElementById('loginForm');
+    const password = document.getElementById('password');
+    const errorEl = document.getElementById('error');
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorEl.textContent = '';
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: password.value })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        errorEl.textContent = data.error || '登录失败';
+        return;
+      }
+      location.href = '/';
+    });
+  </script>
+</body>
+</html>

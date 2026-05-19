@@ -1,0 +1,18 @@
+{
+  "name": "simplai2api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OpenAI-compatible relay for SimplAI agent with account management UI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:runtime": "pm2-runtime start ecosystem.config.cjs",
+    "zip:deploy": "bash scripts/build_deploy_zip.sh"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "pm2": "^7.0.1",
+    "undici": "^6.22.0"
+  }
+}
