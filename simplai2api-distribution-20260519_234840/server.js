@@ -8,7 +8,7 @@ const { fetch, ProxyAgent } = require('undici');
 
 const app = express();
 const HOST = process.env.SIMPLAI2API_HOST || process.env.HOST || '0.0.0.0';
-const PORT = Number(process.env.SIMPLAI2API_PORT || 8031);
+const PORT = Number(process.env.SIMPLAI2API_PORT || process.env.PORT || 8031);
 const ADMIN_PASSWORD = process.env.SIMPLAI2API_ADMIN_PASSWORD || 'Nishibaka114514.';
 const SESSION_COOKIE_NAME = 'simplai2api_session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;

@@ -110,7 +110,7 @@ data/accounts.json
 ### 3) 环境变量建议
 
 - `SIMPLAI2API_ADMIN_PASSWORD`：后台登录密码（务必修改默认值）
-- `SIMPLAI2API_PORT`：默认 `8031`（通常保持默认即可）
+- `SIMPLAI2API_PORT`：可选，默认 `8031`；在 Zeabur 中建议不设置，让平台 `PORT` 自动接管
 - `SIMPLAI2API_HOST`：默认 `0.0.0.0`
 - `SIMPLAI_PROFILE_BASE_DIR`：默认 `/app/profiles`
 
@@ -122,6 +122,19 @@ data/accounts.json
 - OpenAI 接口：`https://<你的-zeabur-域名>/v1/chat/completions`
 
 > 首次启动会安装 Playwright Chromium，构建时间会比普通 Node 服务更长，属于正常现象。
+
+
+### 5) 单服务说明（无需多服务）
+
+这个项目默认就是**单服务**可运行：
+
+- Web 管理台（`/`）
+- OpenAI 兼容接口（`/v1/chat/completions`）
+- 账号池、自动补号、轮询等后台逻辑
+
+都在同一个 Node 进程里，不需要在 Zeabur 再拆多个内部服务。
+
+仅当你要启用可选的 WARP 代理（`USE_WARP_PROXY=true`）时，才需要额外准备代理地址；默认关闭该功能，不影响主流程。
 
 ## 构建可分发 zip
 

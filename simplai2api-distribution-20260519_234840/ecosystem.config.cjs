@@ -9,7 +9,6 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         SIMPLAI2API_HOST: '0.0.0.0',
-        SIMPLAI2API_PORT: '8031',
         SIMPLAI2API_ADMIN_PASSWORD: 'Nishibaka114514.',
         SIMPLAI_PROFILE_BASE_DIR: path.join(__dirname, 'profiles'),
         SIMPLAI_CLOAKBROWSER_PATH: path.join(__dirname, 'third_party', 'CloakBrowser'),
