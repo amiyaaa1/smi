@@ -93,6 +93,8 @@ data/accounts.json
 
 本项目已新增 `zeabur.json`，Zeabur 会优先按 Dockerfile 构建并启动服务。
 
+> 如果你的仓库根目录不是本目录（例如当前仓库是在上层目录里套了 `simplai2api-distribution-20260519_234840/` 子目录），请使用仓库根目录新增的 `Dockerfile` + `zeabur.json`（已适配子目录拷贝），避免 Zeabur 误判为静态服务。
+
 ### 1) 上传项目
 
 - 在 Zeabur 新建项目并导入本仓库

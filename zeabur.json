@@ -1,0 +1,8 @@
+{
+  "$schema": "https://schema.zeabur.com/v2/service.json",
+  "name": "simplai2api",
+  "build": {
+    "type": "dockerfile",
+    "dockerfile": "Dockerfile"
+  }
+}
