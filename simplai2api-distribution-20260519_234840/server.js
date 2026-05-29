@@ -30,6 +30,7 @@ const RECONCILE_MIN_GAP_MS = Number(process.env.SIMPLAI2API_RECONCILE_MIN_GAP_MS
 const HELPER_TIMEOUT_MS = Number(process.env.SIMPLAI2API_HELPER_TIMEOUT_MS || 15 * 60 * 1000);
 const REFRESH_HELPER_TIMEOUT_MS = Number(process.env.SIMPLAI2API_REFRESH_HELPER_TIMEOUT_MS || 3 * 60 * 1000);
 const REGISTER_HELPER_TIMEOUT_MS = Number(process.env.SIMPLAI2API_REGISTER_HELPER_TIMEOUT_MS || 15 * 60 * 1000);
+const REGISTER_FAILURE_LIMIT = Math.max(1, Number(process.env.SIMPLAI2API_REGISTER_FAILURE_LIMIT || 3));
 const ROTATE_PROJECT_HELPER_TIMEOUT_MS = Number(process.env.SIMPLAI2API_ROTATE_PROJECT_HELPER_TIMEOUT_MS || 8 * 60 * 1000);
 const USE_WARP_PROXY = parseBoolean(process.env.USE_WARP_PROXY, false);
 const WARP_PROXY_URL = process.env.WARP_PROXY_URL || 'http://warp:1080';
@@ -1255,7 +1256,8 @@ async function reconcileAccountPool(reason = 'manual', { forceBalanceRefresh = f
           if (targetRegisterCount <= 0) {
             summary.status = 'no_free_slots_to_replenish';
           } else {
-            for (let index = 0; index < targetRegisterCount; index += 1) {
+            let failedRegisterAttempts = 0;
+            while (summary.registered.length < targetRegisterCount && failedRegisterAttempts < REGISTER_FAILURE_LIMIT) {
               try {
                 const account = await registerNewAccountFromTemplate();
                 summary.registered.push({
@@ -1264,9 +1266,14 @@ async function reconcileAccountPool(reason = 'manual', { forceBalanceRefresh = f
                   usableBalance: account.lastKnownUsableBalance,
                 });
               } catch (error) {
+                failedRegisterAttempts += 1;
                 summary.ok = false;
-                summary.errors.push({ type: 'register', error: String(error?.message || error) });
-                break;
+                summary.errors.push({
+                  type: 'register',
+                  attempt: failedRegisterAttempts,
+                  maxAttempts: REGISTER_FAILURE_LIMIT,
+                  error: String(error?.message || error),
+                });
               }
             }
             summary.status = summary.registered.length > 0 ? 'registered_accounts' : 'register_attempt_failed';

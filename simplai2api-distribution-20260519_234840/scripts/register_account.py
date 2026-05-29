@@ -14,6 +14,7 @@ import uuid
 from pathlib import Path
 
 import requests
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
@@ -198,9 +199,23 @@ def wait_and_fill(locator, value, delay=25):
     locator.press_sequentially(value, delay=delay)
 
 
+def robust_goto(page, url, label, *, timeout_ms=90000):
+    log(f'[register] opening {label}')
+    last_error = None
+    for attempt, wait_until in enumerate(('domcontentloaded', 'load'), start=1):
+        try:
+            page.goto(url, wait_until=wait_until, timeout=timeout_ms)
+            return
+        except PlaywrightTimeoutError as error:
+            last_error = error
+            log(f'[register] {label} navigation attempt {attempt} timed out with wait_until={wait_until}; continuing check')
+            if page.url and page.url != 'about:blank':
+                return
+    raise last_error
+
+
 def submit_registration_email(page, email):
-    log('[register] opening register page')
-    page.goto(REGISTER_URL, wait_until='networkidle')
+    robust_goto(page, REGISTER_URL, 'register page')
     page.wait_for_timeout(1500)
     wait_and_fill(page.locator('#SignIn_email'), email)
     page.wait_for_timeout(500)
@@ -212,8 +227,7 @@ def complete_account_activation(page, email, password, verification_link):
     full_name = 'Ewfwefwef'
     org_name = 'Ewfwefwef Org'
 
-    log('[register] opening verification link')
-    page.goto(verification_link, wait_until='networkidle')
+    robust_goto(page, verification_link, 'verification link')
     page.wait_for_timeout(1500)
     wait_and_fill(page.locator('#SignUp_user_full_name'), full_name)
     wait_and_fill(page.locator('#SignUp_org_name'), org_name)
@@ -235,7 +249,7 @@ def complete_account_activation(page, email, password, verification_link):
 
 def fetch_session_from_browser(page):
     log('[register] fetching session JSON')
-    page.goto(SESSION_URL, wait_until='networkidle')
+    robust_goto(page, SESSION_URL, 'session endpoint', timeout_ms=60000)
     page.wait_for_timeout(1200)
     raw = page.locator('body').inner_text()
     data = json.loads(raw)
@@ -866,7 +880,8 @@ def main():
         ctx = launch_browser(profile_dir)
         runtime.set_context(ctx)
         page = ctx.new_page()
-        page.set_default_timeout(90000)
+        page.set_default_timeout(120000)
+        page.set_default_navigation_timeout(120000)
         submit_registration_email(page, email)
         verification_link = wait_for_verification_link(protocol_module, mailbox_session, email, mail_token)
         complete_account_activation(page, email, password, verification_link)

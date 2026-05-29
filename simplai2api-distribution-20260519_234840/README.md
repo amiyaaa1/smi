@@ -116,6 +116,7 @@ data/accounts.json
 - `SIMPLAI2API_HOST`：默认 `0.0.0.0`
 - `SIMPLAI_PROFILE_BASE_DIR`：默认 `/app/profiles`
 - `SIMPLAI2API_SEED_ACCOUNTS_IF_EMPTY`：默认 `true`；当 Zeabur 挂载空的 `/app/data` 时，会用镜像内置模板初始化账号池，从而触发自动补号
+- `SIMPLAI2API_REGISTER_FAILURE_LIMIT`：默认 `3`；单次对账中自动注册遇到临时邮箱/跳转超时等瞬时错误时，会继续重试的失败次数上限
 
 ### 4) 访问
 
@@ -143,7 +144,7 @@ data/accounts.json
 
 Zeabur 挂载持久化目录时，空 Volume 会覆盖镜像里的 `/app/data`。本项目会在镜像内保留一份 `/app/default-data/accounts.json`，启动时如果发现 `/app/data/accounts.json` 不存在，或账号池为空且 `SIMPLAI2API_SEED_ACCOUNTS_IF_EMPTY` 未关闭，就会先写入模板账号，再由启动对账自动补号。
 
-启动日志中应能看到：
+启动日志中应能看到；如果某次临时邮箱或验证链接跳转超时，服务会在同一轮对账中继续重试，最多由 `SIMPLAI2API_REGISTER_FAILURE_LIMIT` 控制：
 
 ```text
 [accounts] initialized /app/data/accounts.json from seed /app/default-data/accounts.json
