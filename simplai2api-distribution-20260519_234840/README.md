@@ -115,6 +115,7 @@ data/accounts.json
 - `SIMPLAI2API_PORT`：可选，默认 `8031`；在 Zeabur 中建议不设置，让平台 `PORT` 自动接管
 - `SIMPLAI2API_HOST`：默认 `0.0.0.0`
 - `SIMPLAI_PROFILE_BASE_DIR`：默认 `/app/profiles`
+- `SIMPLAI2API_SEED_ACCOUNTS_IF_EMPTY`：默认 `true`；当 Zeabur 挂载空的 `/app/data` 时，会用镜像内置模板初始化账号池，从而触发自动补号
 
 ### 4) 访问
 
@@ -137,6 +138,18 @@ data/accounts.json
 都在同一个 Node 进程里，不需要在 Zeabur 再拆多个内部服务。
 
 仅当你要启用可选的 WARP 代理（`USE_WARP_PROXY=true`）时，才需要额外准备代理地址；默认关闭该功能，不影响主流程。
+
+### 6) 自动注册账号说明
+
+Zeabur 挂载持久化目录时，空 Volume 会覆盖镜像里的 `/app/data`。本项目会在镜像内保留一份 `/app/default-data/accounts.json`，启动时如果发现 `/app/data/accounts.json` 不存在，或账号池为空且 `SIMPLAI2API_SEED_ACCOUNTS_IF_EMPTY` 未关闭，就会先写入模板账号，再由启动对账自动补号。
+
+启动日志中应能看到：
+
+```text
+[accounts] initialized /app/data/accounts.json from seed /app/default-data/accounts.json
+[reconcile] start reason=startup
+[reconcile] finish reason=startup status=... registered=... errors=...
+```
 
 ## 构建可分发 zip
 

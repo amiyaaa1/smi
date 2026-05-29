@@ -14,6 +14,9 @@ const SESSION_COOKIE_NAME = 'simplai2api_session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const DATA_DIR = path.join(__dirname, 'data');
 const ACCOUNTS_FILE = path.join(DATA_DIR, 'accounts.json');
+const DEFAULT_DATA_DIR = path.join(__dirname, 'default-data');
+const ACCOUNTS_SEED_FILE = process.env.SIMPLAI2API_ACCOUNTS_SEED_FILE || path.join(DEFAULT_DATA_DIR, 'accounts.json');
+const SEED_ACCOUNTS_IF_EMPTY = parseBoolean(process.env.SIMPLAI2API_SEED_ACCOUNTS_IF_EMPTY, true);
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const REFRESH_HELPER = path.join(__dirname, 'scripts', 'refresh_session.py');
 const REGISTER_HELPER = path.join(__dirname, 'scripts', 'register_account.py');
@@ -235,13 +238,32 @@ function createError(status, message) {
   return error;
 }
 
+
+async function readAccountsSeedObject() {
+  if (!SEED_ACCOUNTS_IF_EMPTY || !ACCOUNTS_SEED_FILE || !fs.existsSync(ACCOUNTS_SEED_FILE)) return null;
+  try {
+    const raw = await fsp.readFile(ACCOUNTS_SEED_FILE, 'utf8');
+    const parsed = JSON.parse(raw || '{}');
+    if (Array.isArray(parsed.items) && parsed.items.length > 0) return parsed;
+  } catch (error) {
+    console.warn(`[accounts] seed file ignored: ${error.message}`);
+  }
+  return null;
+}
+
+function shouldSeedAccountsStore(raw) {
+  if (!SEED_ACCOUNTS_IF_EMPTY || !raw || typeof raw !== 'object') return false;
+  const items = Array.isArray(raw.items) ? raw.items : [];
+  return items.length === 0 && !raw.activeAccountId;
+}
+
 async function ensureAccountsFile() {
   await fsp.mkdir(DATA_DIR, { recursive: true });
   if (!fs.existsSync(ACCOUNTS_FILE)) {
-    await fsp.writeFile(
-      ACCOUNTS_FILE,
-      JSON.stringify({ activeAccountId: null, settings: DEFAULT_SETTINGS, items: [] }, null, 2),
-    );
+    const seed = await readAccountsSeedObject();
+    const initialStore = seed || { activeAccountId: null, settings: DEFAULT_SETTINGS, items: [] };
+    await fsp.writeFile(ACCOUNTS_FILE, JSON.stringify(initialStore, null, 2));
+    console.log(`[accounts] initialized ${ACCOUNTS_FILE}${seed ? ` from seed ${ACCOUNTS_SEED_FILE}` : ''}`);
   }
 }
 
@@ -321,7 +343,17 @@ async function loadAccounts() {
   await accountsSaveQueue;
   await ensureAccountsFile();
   const raw = await fsp.readFile(ACCOUNTS_FILE, 'utf8');
-  const data = JSON.parse(raw || '{}');
+  let data = JSON.parse(raw || '{}');
+  if (shouldSeedAccountsStore(data)) {
+    const seed = await readAccountsSeedObject();
+    if (seed) {
+      data = seed;
+      state.accounts = normalizeAccountsStore(data || {});
+      await saveAccounts();
+      console.log(`[accounts] seeded empty account store from ${ACCOUNTS_SEED_FILE}`);
+      return state.accounts;
+    }
+  }
   state.accounts = normalizeAccountsStore(data || {});
   return state.accounts;
 }
@@ -1139,6 +1171,7 @@ async function reconcileAccountPool(reason = 'manual', { forceBalanceRefresh = f
 
   state.lastReconcileStartedAt = Date.now();
   state.reconcilePromise = (async () => {
+    console.log(`[reconcile] start reason=${reason}`);
     await loadAccounts();
     const summary = {
       ok: true,
@@ -1252,6 +1285,10 @@ async function reconcileAccountPool(reason = 'manual', { forceBalanceRefresh = f
     state.accounts.lastReconcileAt = summary.finishedAt;
     state.accounts.lastReconcileSummary = summary;
     await saveAccounts();
+    console.log(`[reconcile] finish reason=${reason} status=${summary.status} registered=${summary.registered.length} errors=${summary.errors.length}`);
+    if (summary.errors.length > 0) {
+      console.warn(`[reconcile] errors: ${JSON.stringify(summary.errors.slice(0, 3))}`);
+    }
     return summary;
   })();
 

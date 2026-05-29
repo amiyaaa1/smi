@@ -21,7 +21,8 @@ RUN python3 -m pip install --break-system-packages --no-cache-dir -r requirement
 
 COPY . .
 
-RUN mkdir -p /app/data /app/profiles /app/logs /app/cloakbrowser-cache
+RUN mkdir -p /app/default-data /app/data /app/profiles /app/logs /app/cloakbrowser-cache \
+    && cp -a /app/data/. /app/default-data/
 
 EXPOSE 8031
 
