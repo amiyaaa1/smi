@@ -1,0 +1,9 @@
+Deploy command: bash install.sh
+Admin URL: http://SERVER_IP:8031/
+Admin password: Nishibaka114514.
+Package type: distribution
+Profiles mode: excluded
+Profiles copied: 0
+WARP default: disabled. No external warp-net dependency is included.
+Accounts included: current template account only; non-template relay accounts are excluded.
+Browser profiles removed: token refresh via profile is unavailable until you relogin.

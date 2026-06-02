@@ -1,0 +1,45 @@
+{
+  "activeAccountId": "simplai-main",
+  "settings": {
+    "autoReplenishEnabled": true,
+    "minAvailableAccounts": 20,
+    "preExhaustedCreditsThreshold": 20,
+    "maxPoolSize": 200,
+    "balanceRefreshEveryCalls": 3
+  },
+  "lastReconcileAt": null,
+  "lastReconcileSummary": null,
+  "items": [
+    {
+      "id": "simplai-main",
+      "label": "SimplAI Claude Opus 4.6",
+      "email": "nbryant361@epsteinisland.click",
+      "password": "Zxewf12313@",
+      "accessToken": "59b935b2-928f-44bf-a913-3a942b00c3cf",
+      "userId": "3649",
+      "tenantId": "3307",
+      "projectId": "2637",
+      "agentName": "UNO Rule & Web Research Agent",
+      "agentPipelineId": "agent-6a0c418537c4737feb66e7a1",
+      "versionId": "latest",
+      "browserProfileDir": "",
+      "enabled": true,
+      "notes": "Switched to new project 2637 after old project 2629 hit project run limit; published fresh clean agent",
+      "createdAt": "2026-05-19T12:30:00.000Z",
+      "updatedAt": "2026-05-19T15:05:10.067Z",
+      "lastUsedAt": "2026-05-19T13:11:56.875Z",
+      "lastBalanceAt": "2026-05-19T15:05:10.067Z",
+      "callsSinceBalanceRefresh": 0,
+      "lastKnownUsableBalance": 3933.4341,
+      "lastKnownWalletBalance": 3933.4341,
+      "balanceRefreshError": "",
+      "lastRelayUseCount": 24,
+      "lastRelayStatus": 200,
+      "lastRelayError": "",
+      "lastRelayCompletedAt": "2026-05-19T13:12:08.222Z",
+      "lastRelayFailedAt": null,
+      "autoRegistered": false,
+      "agentRelayVerifiedAt": "2026-05-19T10:25:30.000Z"
+    }
+  ]
+}

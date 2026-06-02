@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimplAI2API 管理台</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div>
+        <h1>SimplAI2API 管理台</h1>
+        <p>OpenAI 格式中转 + 多账号轮询 + 自动补号</p>
+      </div>
+      <div class="hero-actions">
+        <button id="reloadBtn">刷新</button>
+        <button id="refreshBalancesBtn" class="ghost">刷新全部积分</button>
+        <button id="reconcileBtn" class="ok">手动对账/补号</button>
+        <button id="logoutBtn" class="ghost">退出登录</button>
+      </div>
+    </header>
+
+    <section class="card status-card">
+      <h2>服务信息</h2>
+      <div id="serviceInfo" class="grid two"></div>
+      <pre class="code">POST /v1/chat/completions
+仅使用: messages / max_tokens(max_completion_tokens) / temperature / stream
+轮询策略: 每次优先使用“最久未使用”的可用账号</pre>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h2>统一配置</h2>
+        <span class="badge">自动补号 / 积分阈值 / 最大池</span>
+      </div>
+      <form id="settingsForm" class="form-grid compact-grid">
+        <label class="checkbox-label full-span">
+          <input id="autoReplenishEnabled" type="checkbox" checked />
+          <span>启用自动补号</span>
+        </label>
+        <label>
+          <span>少于多少可用账号就补号</span>
+          <input id="minAvailableAccounts" type="number" min="0" step="1" />
+        </label>
+        <label>
+          <span>预耗尽积分阈值</span>
+          <input id="preExhaustedCreditsThreshold" type="number" min="0" step="0.01" />
+        </label>
+        <label>
+          <span>最大账号池数量</span>
+          <input id="maxPoolSize" type="number" min="1" step="1" />
+        </label>
+        <label>
+          <span>每账号调用多少次刷新一次积分</span>
+          <input id="balanceRefreshEveryCalls" type="number" min="1" step="1" />
+        </label>
+        <div class="form-actions full-span">
+          <button type="submit">保存配置</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h2>账号列表</h2>
+        <span id="activeBadge" class="badge">模板账号: -</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>账号</th>
+              <th>邮箱</th>
+              <th>用户/项目</th>
+              <th>剩余积分</th>
+              <th>使用/刷新</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="accountsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h2 id="formTitle">新增 / 编辑账号</h2>
+        <button id="resetBtn" class="ghost">清空表单</button>
+      </div>
+      <form id="accountForm" class="form-grid">
+        <input type="hidden" id="accountId" />
+        <label>
+          <span>显示名称</span>
+          <input id="label" required placeholder="比如：SimplAI Claude Opus 4.6" />
+        </label>
+        <label>
+          <span>邮箱</span>
+          <input id="email" placeholder="账号邮箱" />
+        </label>
+        <label>
+          <span>密码</span>
+          <input id="password" type="password" placeholder="账号密码" />
+        </label>
+        <label>
+          <span>Access Token</span>
+          <input id="accessToken" placeholder="PIM-SID / access token" />
+        </label>
+        <label>
+          <span>User ID</span>
+          <input id="userId" placeholder="3649" />
+        </label>
+        <label>
+          <span>Tenant ID</span>
+          <input id="tenantId" placeholder="3307" />
+        </label>
+        <label>
+          <span>Project ID</span>
+          <input id="projectId" placeholder="2629" />
+        </label>
+        <label>
+          <span>Agent 名称</span>
+          <input id="agentName" placeholder="UNO Rule & Web Research Agent" />
+        </label>
+        <label>
+          <span>Agent Pipeline ID</span>
+          <input id="agentPipelineId" placeholder="agent-xxxx" />
+        </label>
+        <label>
+          <span>Version ID</span>
+          <input id="versionId" placeholder="2 / latest" />
+        </label>
+        <label>
+          <span>浏览器 Profile 目录</span>
+          <input id="browserProfileDir" placeholder="/tmp/simplai_profile_reg" />
+        </label>
+        <label>
+          <span>备注</span>
+          <input id="notes" placeholder="备注" />
+        </label>
+        <label class="checkbox-label">
+          <input id="enabled" type="checkbox" checked />
+          <span>启用该账号</span>
+        </label>
+        <div class="form-actions">
+          <button type="submit">保存账号</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>OpenAI 调用示例</h2>
+      <pre class="code">curl http://127.0.0.1:8031/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "anything",
+    "messages": [
+      {"role": "system", "content": "Be concise."},
+      {"role": "user", "content": "Reply with OK only."}
+    ],
+    "temperature": 0.2,
+    "max_tokens": 32,
+    "stream": false
+  }'</pre>
+    </section>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
